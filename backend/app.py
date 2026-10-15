@@ -50,38 +50,50 @@ def generate_minutes():
             "error": "GEMINI_API_KEY is missing in .env"
         }), 500
 
+
     prompt = """
 You are an expert AI Meeting Minutes Generator.
 
-Convert the following unstructured meeting notes into
-professional and concise structured meeting minutes.
+Convert the meeting notes into professional structured meeting minutes.
 
 Extract:
 1. Meeting summary
 2. Key decisions
 3. Action items
-4. Responsible persons and deadlines
+4. Responsibilities
 
 Rules:
-- Do not invent facts, names, decisions or deadlines.
-- Include only information supported by the notes.
-- If an owner or deadline is missing, say "Not specified".
-- Preserve relative deadlines such as Friday or next week.
-- Keep the language clear and professional.
-- Return only a valid JSON object.
-- All JSON values must be strings.
-- Do not include markdown code fences.
+- Never invent facts, names, owners, dates, or deadlines.
+- Every action item must be a specific task supported by the notes.
+- For a missing owner, use exactly "Unspecified".
+- For a missing deadline, use exactly "Unspecified".
+- Preserve deadlines as written in the notes.
+- Set every new task status to "Pending".
+- Allowed statuses are only "Pending", "In Progress", and "Completed".
+- Do not mark a task Completed unless the notes explicitly say it is completed.
+- Return only a valid JSON object. Do not use markdown fences.
 
 Required JSON format:
 {
-    "summary": "Concise meeting summary",
-    "decisions": "Numbered list of decisions",
-    "actions": "Numbered list of action items",
-    "responsibilities": "Tasks with owners and deadlines"
+  "summary": "Concise meeting summary",
+  "decisions": "Numbered list of decisions",
+  "actions": [
+    {
+      "task": "Specific action item",
+      "owner": "Person named in notes or Unspecified",
+      "deadline": "Deadline from notes or Unspecified",
+      "status": "Pending"
+    }
+  ],
+  "responsibilities": "Readable summary of task owners and deadlines"
 }
+
+If no action items exist, return an empty array for "actions".
 
 Meeting notes:
 """ + notes
+
+
 
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/"
@@ -179,5 +191,7 @@ Meeting notes:
         }), 502
 
 
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
