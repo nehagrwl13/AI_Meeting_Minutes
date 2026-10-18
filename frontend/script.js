@@ -45,6 +45,7 @@ async function generateMinutes() {
     fields.forEach((field) => {
       document.getElementById(field).value = data[field] || "Not mentioned in the meeting notes.";
     });
+    renderActionTracker(data.actions);
     setEditing(false);
     resultSection.classList.remove("hidden");
     showStatus("Meeting minutes generated successfully!", "success");
@@ -240,3 +241,173 @@ function clearAll() {
   statusElement.textContent = "";
   notesInput.focus();
 }
+
+function renderActionTracker(actions) {
+  const tracker = document.getElementById("actionTracker");
+  tracker.innerHTML = "";
+
+  
+if (!Array.isArray(actions) || actions.length === 0) {
+  tracker.textContent = "No action items found.";
+  renderTaskReminders([]);
+  return;
+}
+
+renderTaskReminders(actions);
+
+
+  actions.forEach((action, index) => {
+    const card = document.createElement("div");
+    card.className = "tracker-card";
+
+    const task = document.createElement("p");
+    task.textContent = action.task || "Unspecified task";
+
+    const owner = document.createElement("p");
+    owner.textContent = `Owner: ${action.owner || "Unspecified"}`;
+
+    
+    const deadline = document.createElement("p");
+    const deadlineText = action.deadline || "Unspecified";
+    deadline.textContent = `Deadline: ${deadlineText}`;
+
+    const parsedDeadline = Date.parse(deadlineText);
+    const hasExactDate = /^\d{4}-\d{2}-\d{2}$/.test(deadlineText);
+    const isOverdue =
+      hasExactDate &&
+      !Number.isNaN(parsedDeadline) &&
+      parsedDeadline < new Date().setHours(0, 0, 0, 0) &&
+      action.status !== "Completed";
+
+    if (isOverdue) {
+      const overdueLabel = document.createElement("strong");
+      overdueLabel.textContent = "OVERDUE";
+      overdueLabel.style.color = "#dc2626";
+      card.appendChild(overdueLabel);
+    }
+
+
+    const status = document.createElement("select");
+    ["Pending", "In Progress", "Completed"].forEach((value) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      status.appendChild(option);
+    });
+
+    status.value = ["Pending", "In Progress", "Completed"].includes(action.status)
+      ? action.status
+      : "Pending";
+
+    
+status.addEventListener("change", () => {
+  action.status = status.value;
+  renderTaskReminders(actions);
+});
+
+
+    const statusLabel = document.createElement("label");
+    statusLabel.textContent = "Status: ";
+    statusLabel.appendChild(status);
+
+    card.append(task, owner, deadline, statusLabel);
+    tracker.appendChild(card);
+  });
+}
+
+
+function renderTaskReminders(actions) {
+  const reminderList = document.getElementById("reminderList");
+  reminderList.innerHTML = "";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const reminders = [];
+
+  actions.forEach((action) => {
+    if (action.status === "Completed") return;
+
+    const deadline = action.deadline || "Unspecified";
+
+    // Only process exact dates; don't guess dates from words like Friday.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(deadline)) return;
+
+    const dueDate = new Date(`${deadline}T00:00:00`);
+    if (Number.isNaN(dueDate.getTime())) return;
+
+    const daysLeft = Math.round(
+      (dueDate.getTime() - today.getTime()) / 86400000
+    );
+
+    if (daysLeft < 0) {
+      reminders.push({
+        type: "overdue",
+        message: `Overdue: ${action.task || "Unspecified task"} — deadline ${deadline}`
+      });
+    } else if (daysLeft <= 1) {
+      reminders.push({
+        type: "upcoming",
+        message: `Due soon: ${action.task || "Unspecified task"} — deadline ${deadline}`
+      });
+    }
+  });
+
+  if (reminders.length === 0) {
+    reminderList.textContent =
+      "No upcoming or overdue reminders for tasks with exact dates.";
+    return;
+  }
+
+const overdueReminder = reminders.find(
+  (reminder) => reminder.type === "overdue"
+);
+
+if (overdueReminder) {
+  showReminderPopup(overdueReminder.message);
+}
+
+  reminders.forEach((reminder) => {
+    const item = document.createElement("div");
+    item.className = `reminder-item ${reminder.type}`;
+    item.textContent = reminder.message;
+    reminderList.appendChild(item);
+  });
+}
+
+
+function showReminderPopup(message) {
+  const modal = document.getElementById("reminderModal");
+  const messageElement = document.getElementById("reminderModalMessage");
+
+  if (!modal || !messageElement) return;
+
+  messageElement.textContent = message;
+  modal.style.display = "";
+  modal.classList.remove("hidden");
+}
+
+
+
+function closeReminderPopup() {
+  const modal = document.getElementById("reminderModal");
+
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.style.display = "none";
+  }
+}
+
+
+document.getElementById("closeReminderModal")?.addEventListener(
+  "click",
+  closeReminderPopup
+);
+
+
+
+document.getElementById("dismissReminderModal")?.addEventListener(
+  "click",
+  closeReminderPopup
+);
+

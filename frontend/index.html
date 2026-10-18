@@ -76,6 +76,20 @@
           <div class="result-field full-width"><label for="summary"><span class="result-number">01</span> MEETING SUMMARY</label><textarea id="summary" class="result-textarea" rows="4" disabled></textarea></div>
           <div class="result-field"><label for="decisions"><span class="result-number">02</span> KEY DECISIONS</label><textarea id="decisions" class="result-textarea" rows="5" disabled></textarea></div>
           <div class="result-field"><label for="actions"><span class="result-number">03</span> ACTION ITEMS</label><textarea id="actions" class="result-textarea" rows="5" disabled></textarea></div>
+          <div class="tracker-section">
+  <h3>Action Item Tracker</h3>
+  
+  <div class="reminder-panel" id="reminderPanel" aria-live="polite">
+    <h3><i class="fa-solid fa-bell"></i> Task Reminders</h3>
+    <div id="reminderList">
+      <p>Reminders will appear when task deadlines need attention.</p>
+    </div>
+  </div>
+
+  <div id="actionTracker">
+    <p>Generate meeting minutes to see trackable tasks here.</p>
+  </div>
+</div>
           <div class="result-field full-width"><label for="responsibilities"><span class="result-number">04</span> RESPONSIBLE PERSONS & DEADLINES</label><textarea id="responsibilities" class="result-textarea" rows="4" disabled></textarea></div>
         </div>
         <div class="result-footer"><div class="result-footer-note"><i class="fa-solid fa-circle-info"></i><span id="editHint">Want to make changes? Select <strong>Edit Minutes</strong> first.</span></div><div class="export-actions"><button class="btn btn-outline" onclick="copyMinutes()"><i class="fa-regular fa-copy"></i> Copy minutes</button><button class="btn btn-outline" onclick="downloadTXT()"><i class="fa-solid fa-file-arrow-down"></i> Download TXT</button><button class="btn btn-download" onclick="downloadPDF()"><i class="fa-solid fa-file-pdf"></i> Save as PDF</button></div></div>
@@ -83,6 +97,17 @@
       <footer class="page-footer"><span>MeetMind AI <span class="footer-dot">•</span> Clear meetings. Better outcomes.</span><span>Built for productive teams <i class="fa-regular fa-heart"></i></span></footer>
     </main>
   </div>
-  <script src="script.js"></script>
+  
+<div id="reminderModal" class="reminder-modal hidden" role="dialog" aria-modal="true" aria-labelledby="reminderModalTitle">
+  <div class="reminder-modal-content">
+    <button type="button" id="closeReminderModal" class="reminder-modal-close" aria-label="Close reminder">&times;</button>
+    <div class="reminder-modal-icon">🔔</div>
+    <h2 id="reminderModalTitle">Task Reminder</h2>
+    <p id="reminderModalMessage">You have a task that needs attention.</p>
+    <button type="button" id="dismissReminderModal" class="reminder-modal-button">Got it</button>
+  </div>
+</div>
+<script src="script.js"></script>
+  
 </body>
 </html>

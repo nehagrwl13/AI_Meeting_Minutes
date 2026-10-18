@@ -168,10 +168,42 @@ Meeting notes:
             "responsibilities"
         ]
 
+        
+
+        actions = minutes.get("actions", [])
+
+        if not isinstance(actions, list):
+            actions = []
+
+        clean_actions = []
+
+        for action in actions:
+            if not isinstance(action, dict):
+                continue
+
+            clean_actions.append({
+                "task": str(action.get("task") or "Unspecified"),
+                "owner": str(action.get("owner") or "Unspecified"),
+                "deadline": str(action.get("deadline") or "Unspecified"),
+                "status": (
+                    action.get("status")
+                    if action.get("status") in [
+                        "Pending", "In Progress", "Completed"
+                    ]
+                    else "Pending"
+                )
+            })
+
         output = {
-            field: str(minutes.get(field) or "Not mentioned")
-            for field in required_fields
+            "summary": str(minutes.get("summary") or "Not mentioned"),
+            "decisions": str(minutes.get("decisions") or "Not mentioned"),
+            "actions": clean_actions,
+            "responsibilities": str(
+                minutes.get("responsibilities") or "Not mentioned"
+            )
         }
+
+
 
         return jsonify(output)
 
